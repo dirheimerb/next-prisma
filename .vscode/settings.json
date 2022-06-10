@@ -15,5 +15,7 @@
         "cmd": "yarn generate:hooks"
       }
     ]
-  }
+  },
+  "WillLuke.nextjs.addTypesOnSave": true,
+  "WillLuke.nextjs.hasPrompted": true
 }
