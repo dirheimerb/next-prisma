@@ -1,70 +1,222 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
+  output   = "./generated/prisma-client-js"
+
 }
 
-generator nexusPrisma {
-  provider = "nexus-prisma"
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
-enum Role {
-  USER
-  ADMIN
-  SUPERADMIN
+generator docs {
+  provider = "node node_modules/prisma-docs-generator"
+  output = "../docs"
 }
-
+generator erd {
+  provider = "prisma-erd-generator"
+  output = "../ERD.svg"
+}
+generator dbml {
+  provider = "prisma-dbml-generator"
+  output     = "../dbml"
+}
 model Account {
   id                 String    @id @default(uuid())
-  userId             String
+  userId             String    @map("user_id")
   providerType       String
-  providerId         String
-  providerAccountId  String
-  refreshToken       String?
+  provider           String
+  providerAccountId  String  @map("provider_account_id")
+  refreshToken       String?   @map("refresh_token")
   accessToken        String?
   accessTokenExpires DateTime?
+  idToken           String?  @map("id_token")
+  sessionState      String?  @map("session_state")
+  oauthTokenSecret  String?  @map("oauth_token_secret")
+  oauthToken        String?  @map("oauth_token")
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
-  user               User      @relation(fields: [userId], references: [id])
+  scope              String?
+  token_type         String?
+  invites            Invite[]
+  user User @relation(fields: [userId], references: [id])
+  
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
 
-  @@unique([providerId, providerAccountId])
 }
 
 model Session {
-  id           String   @id @default(uuid())
-  userId       String
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique @map("session_token")
+  userId       String      @map("user_id")
   expires      DateTime
-  sessionToken String   @unique
-  accessToken  String   @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id])
+  @@map("sessions")
 }
 
 model User {
   id            String    @id @default(uuid())
   name          String?
-  email         String?   @unique
-  emailVerified DateTime?
+  email         String?   
+  emailVerified DateTime? @map("email_verified")
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  username      String    
+  password      String
   accounts      Account[]
+  Comment       Comment[]
+  links         Link[]
+  posts         Post[]
+  profile       Profile?
   sessions      Session[]
-  role          Role      @default(USER)
+  customer      Customer?
+  
+
+
+  @@map(name: "users")
 }
 
+model VerificationToken {
+  id        String @id @default(uuid())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @default(now()) @map("updated_at")
+
+  @@unique([identifier,token])
+  @@map("verification_requests")
+}
 model VerificationRequest {
   id         String   @id @default(uuid())
   identifier String
-  token      String   @unique
+  token      String   
   expires    DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
+
+model Link {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  url       String
+  shortUrl  String
+  userId    String?
+  User      User?    @relation(fields: [userId], references: [id])
+}
+
+model Post {
+  id        String    @id
+  title     String
+  content   String?
+  published Boolean   @default(false)
+  authorId  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  viewCount Int       @default(0)
+  postId    String?
+  tagId     String?
+  author    User?     @relation(fields: [authorId], references: [id])
+  Tag       Tag?      @relation(fields: [tagId], references: [id])
+  Comment   Comment[]
+}
+
+model Profile {
+  id     Int    @id @default(autoincrement())
+  bio    String
+  userId String 
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Tag {
+  id    String @id @default(uuid())
+  tag   String 
+  posts Post[]
+}
+
+model Comment {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  comment     String
+  writtenById String
+  postId      String
+  userId      String?
+  Post        Post     @relation(fields: [postId], references: [id])
+  User        User?    @relation(fields: [userId], references: [id])
+}
+
+model Invite {
+  id        String   @id @default(uuid())
+  dateSent  DateTime @default(now())
+  email     String
+  accountId String?
+  isValid   Boolean  @default(true)
+  account   Account? @relation(fields: [accountId], references: [id])
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("customers")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  active      Boolean  @default(false)
+  name        String
+  description String?
+  image       String?
+
+  createdAt   DateTime @default(now()) 
+  updatedAt   DateTime @default(now()) 
+  
+  @@map("products")
+}
+
+model Price {
+  id                String         @id @default(cuid())
+  productId         String         @map("product_id")
+  active            Boolean        @default(false)
+  currency          String
+
+  unitAmount        Int?           @map("unit_amount")
+  interval_count    Int?
+  trial_period_days Int?
+
+  createdAt         DateTime       @default(now()) 
+  updatedAt         DateTime       @default(now())
+
+  subscriptions     Subscription[]
+
+  @@map("prices")
+}
+
+model Subscription {
+  id                   String             @id 
+  userId               String             @map("user_id")
+  priceId              String
+  start_date           DateTime?
+  ended_at             DateTime?
+  trial_end            DateTime?
+  trial_start          DateTime?
+  cancel_at            DateTime?
+  cancel_at_period_end Boolean?
+  canceled_at          DateTime?
+
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @default(now()) @map("updated_at")
+  price                Price              @relation(fields: [priceId], references: [id])
+  
+  @@map("subscriptions")
+}
+

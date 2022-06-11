@@ -4,7 +4,7 @@ import type { Context } from './context'
 export const isAdmin: FieldAuthorizeResolver<any, any> = (
   _,
   {},
-  { role }: Context
+  { role }: Context,
 ) => {
   return role === 'ADMIN'
 }

@@ -14,7 +14,7 @@ export type ViewerQuery = { __typename?: 'Query' } & {
   viewer?: Types.Maybe<{ __typename?: 'User' } & UserDetailFragment>
 }
 
-export const UserDetailFragmentDoc: DocumentNode = {
+export const UserDetailFragmentDoc = {
   kind: 'Document',
   definitions: [
     {
@@ -33,8 +33,8 @@ export const UserDetailFragmentDoc: DocumentNode = {
       },
     },
   ],
-}
-export const ViewerDocument: DocumentNode = {
+} as unknown as DocumentNode
+export const ViewerDocument = {
   kind: 'Document',
   definitions: [
     {
@@ -76,10 +76,10 @@ export const ViewerDocument: DocumentNode = {
       },
     },
   ],
-}
+} as unknown as DocumentNode
 
 export function useViewerQuery(
-  options: Omit<Urql.UseQueryArgs<ViewerQueryVariables>, 'query'> = {}
+  options: Omit<Urql.UseQueryArgs<ViewerQueryVariables>, 'query'> = {},
 ) {
   return Urql.useQuery<ViewerQuery>({ query: ViewerDocument, ...options })
 }

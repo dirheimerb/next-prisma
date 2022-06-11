@@ -1,0 +1,205 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table accounts {
+  id String [pk]
+  userId String [not null]
+  providerType String [not null]
+  provider String [not null]
+  providerAccountId String [not null]
+  refreshToken String
+  accessToken String
+  accessTokenExpires DateTime
+  idToken String
+  sessionState String
+  oauthTokenSecret String
+  oauthToken String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  scope String
+  token_type String
+  invites Invite [not null]
+  user users [not null]
+
+  indexes {
+    (provider, providerAccountId) [unique]
+  }
+}
+
+Table sessions {
+  id Int [pk, increment]
+  sessionToken String [unique, not null]
+  userId String [not null]
+  expires DateTime [not null]
+  user users [not null]
+}
+
+Table users {
+  id String [pk]
+  name String
+  email String
+  emailVerified DateTime
+  image String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  username String [not null]
+  password String [not null]
+  accounts accounts [not null]
+  Comment Comment [not null]
+  links Link [not null]
+  posts Post [not null]
+  profile Profile
+  sessions sessions [not null]
+  customer customers
+}
+
+Table verification_requests {
+  id String [pk]
+  identifier String [not null]
+  token String [unique, not null]
+  expires DateTime [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (identifier, token) [unique]
+  }
+}
+
+Table VerificationRequest {
+  id String [pk]
+  identifier String [not null]
+  token String [not null]
+  expires DateTime [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table Link {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  url String [not null]
+  shortUrl String [not null]
+  userId String
+  User users
+}
+
+Table Post {
+  id String [pk]
+  title String [not null]
+  content String
+  published Boolean [not null, default: false]
+  authorId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  viewCount Int [not null, default: 0]
+  postId String
+  tagId String
+  author users
+  Tag Tag
+  Comment Comment [not null]
+}
+
+Table Profile {
+  id Int [pk, increment]
+  bio String [not null]
+  userId String [not null]
+  user users [not null]
+}
+
+Table Tag {
+  id String [pk]
+  tag String [not null]
+  posts Post [not null]
+}
+
+Table Comment {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  comment String [not null]
+  writtenById String [not null]
+  postId String [not null]
+  userId String
+  Post Post [not null]
+  User users
+}
+
+Table Invite {
+  id String [pk]
+  dateSent DateTime [default: `now()`, not null]
+  email String [not null]
+  accountId String
+  isValid Boolean [not null, default: true]
+  account accounts
+}
+
+Table customers {
+  id String [pk]
+  userId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  user users [not null]
+}
+
+Table products {
+  id String [pk]
+  active Boolean [not null, default: false]
+  name String [not null]
+  description String
+  image String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+}
+
+Table prices {
+  id String [pk]
+  productId String [not null]
+  active Boolean [not null, default: false]
+  currency String [not null]
+  unitAmount Int
+  interval_count Int
+  trial_period_days Int
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  subscriptions subscriptions [not null]
+}
+
+Table subscriptions {
+  id String [pk]
+  userId String [not null]
+  priceId String [not null]
+  start_date DateTime
+  ended_at DateTime
+  trial_end DateTime
+  trial_start DateTime
+  cancel_at DateTime
+  cancel_at_period_end Boolean
+  canceled_at DateTime
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  price prices [not null]
+}
+
+Ref: accounts.userId > users.id [delete: NONE]
+
+Ref: sessions.userId > users.id [delete: NONE]
+
+Ref: Link.userId > users.id [delete: NONE]
+
+Ref: Post.authorId > users.id [delete: NONE]
+
+Ref: Post.tagId > Tag.id [delete: NONE]
+
+Ref: Profile.userId - users.id [delete: NONE]
+
+Ref: Comment.postId > Post.id [delete: NONE]
+
+Ref: Comment.userId > users.id [delete: NONE]
+
+Ref: Invite.accountId > accounts.id [delete: NONE]
+
+Ref: customers.userId - users.id [delete: NONE]
+
+Ref: subscriptions.priceId > prices.id [delete: NONE]
